@@ -1,0 +1,27 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --background: hsl(220, 20%, 6%);
+  --foreground: hsl(40, 10%, 75%);
+  --card: hsl(220, 18%, 10%);
+  --primary: hsl(0, 65%, 45%);
+  --primary-foreground: hsl(40, 10%, 90%);
+  --secondary: hsl(45, 60%, 40%);
+  --muted: hsl(220, 15%, 14%);
+  --muted-foreground: hsl(220, 10%, 45%);
+  --accent: hsl(140, 25%, 25%);
+  --accent-foreground: hsl(140, 20%, 75%);
+  --border: hsl(220, 15%, 18%);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
