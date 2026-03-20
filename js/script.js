@@ -1,4 +1,4 @@
-// ===== SCENE DATA =====
+
 const scenes = {
   intro: {
     id: "intro",
@@ -345,7 +345,7 @@ const scenes = {
 const FIRST_SCENE = "intro";
 const STORAGE_KEY = "city-never-slept-save";
 
-// ===== GAME STATE =====
+
 let gameState = loadGame();
 let textIndex = 0;
 let showChoices = false;
@@ -364,7 +364,7 @@ function saveGame() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
 }
 
-// ===== RENDER =====
+
 function render() {
   const game = document.getElementById("game");
   const restartBtn = document.getElementById("restart-btn");
@@ -383,10 +383,10 @@ function render() {
   const isTextComplete = scene.text ? textIndex >= scene.text.length : true;
   const bg = scene.background || "dark";
 
-  // Show/hide restart
+  
   restartBtn.style.display = isStart ? "none" : "block";
 
-  // Title screen
+ 
   if (isStart) {
     game.innerHTML = `
       <div class="title-screen">
@@ -398,7 +398,7 @@ function render() {
     return;
   }
 
-  // Video scene
+
   if (scene.type === "video") {
     game.innerHTML = `
       <div class="scene-container" style="display:flex;align-items:center;justify-content:center;width:100%;height:100vh;padding:0;margin:0">
@@ -429,27 +429,26 @@ function render() {
     return;
   }
 
-  // Build scene HTML
   let html = `<div class="scene-container ${isTransitioning ? '' : ''}" onclick="handleSceneClick()">`;
 
-  // Background image
+  
   if (scene.backgroundImage) {
     html += `<img src="${scene.backgroundImage}" alt="" class="bg-image" />`;
   }
 
-  // Overlays
+ 
   html += `<div class="gradient-overlay overlay-${bg}"></div>`;
   html += `<div class="vignette"></div>`;
 
-  // Content
+ 
   html += `<div class="content">`;
 
-  // Day marker
+  
   if (scene.dayMarker) {
     html += `<h1 class="day-marker">${scene.dayMarker}</h1>`;
   }
 
-  // Text lines
+  
   html += `<div style="display:flex;flex-direction:column;gap:1rem;width:100%">`;
   if (scene.text) {
     for (let i = 0; i < textIndex && i < scene.text.length; i++) {
@@ -458,7 +457,7 @@ function render() {
   }
   html += `</div>`;
 
-  // Special text
+  
   if (isTextComplete && scene.specialText) {
     const st = scene.specialText;
     if (st.type === "diary") {
@@ -472,7 +471,7 @@ function render() {
     }
   }
 
-  // Choices
+  
   if (showChoices && scene.choices) {
     html += `<div class="choices-container">`;
     scene.choices.forEach(function(c) {
@@ -483,17 +482,17 @@ function render() {
     html += `</div>`;
   }
 
-  // Continue prompt
+ 
   if (isTextComplete && scene.type !== "choice" && scene.nextScene) {
     html += `<p class="narrative-text continue-prompt" style="margin-top:1.5rem">Press Enter or click to continue</p>`;
   }
 
-  // Tap indicator
+  
   if (!isTextComplete) {
     html += `<p class="narrative-text tap-indicator">▼</p>`;
   }
 
-  // Ending
+  
   if (scene.type === "ending" && !scene.nextScene && isTextComplete) {
     html += `<p class="end-text">The End.</p>`;
   }
@@ -501,10 +500,9 @@ function render() {
   html += `</div></div>`;
   game.innerHTML = html;
 
-  // Auto-advance logic
+
   if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
 
-  // Show choices after delay
   if (isTextComplete && scene.type === "choice" && !showChoices) {
     setTimeout(function() {
       showChoices = true;
@@ -513,7 +511,7 @@ function render() {
   }
 }
 
-// ===== GAME LOGIC =====
+
 function handleSceneClick() {
   const scene = scenes[gameState.currentSceneId];
   if (!scene) return;
@@ -538,7 +536,7 @@ function goToScene(sceneId) {
   if (isTransitioning) return;
   isTransitioning = true;
 
-  // Fade out
+  
   const container = document.querySelector(".scene-container");
   if (container) container.style.animation = "scene-fade-out 0.4s ease-in forwards";
 
@@ -575,7 +573,7 @@ function skipVideo() {
   }
 }
 
-// ===== KEYBOARD NAVIGATION =====
+
 document.addEventListener("keydown", function(e) {
   if (e.key === "R" || e.key === "r") {
     restart();
@@ -587,10 +585,10 @@ document.addEventListener("keydown", function(e) {
   }
 });
 
-// ===== RESTART BUTTON =====
+
 document.getElementById("restart-btn").addEventListener("click", restart);
 
-// ===== START =====
+
 render();
 
 
