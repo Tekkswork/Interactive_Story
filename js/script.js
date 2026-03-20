@@ -1,3 +1,4 @@
+// ===== SCENE DATA =====
 const scenes = {
   intro: {
     id: "intro",
@@ -362,3 +363,232 @@ function loadGame() {
 function saveGame() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
 }
+
+// ===== RENDER =====
+function render() {
+  const game = document.getElementById("game");
+  const restartBtn = document.getElementById("restart-btn");
+  const scene = scenes[gameState.currentSceneId];
+
+  if (!scene) {
+    game.innerHTML = `
+      <div class="scene-container">
+        <p class="scene-text" style="color:var(--primary)">Scene not found.</p>
+        <button class="choice-button" onclick="restart()">Restart</button>
+      </div>`;
+    return;
+  }
+
+  const isStart = gameState.currentSceneId === FIRST_SCENE && textIndex === 0;
+  const isTextComplete = scene.text ? textIndex >= scene.text.length : true;
+  const bg = scene.background || "dark";
+
+  // Show/hide restart
+  restartBtn.style.display = isStart ? "none" : "block";
+
+  // Title screen
+  if (isStart) {
+    game.innerHTML = `
+      <div class="title-screen">
+        <h1>The City That Never Slept</h1>
+        <p class="narrative-text">An Interactive Story</p>
+        <button class="choice-button" style="margin-top:2rem" onclick="advanceText()">Begin</button>
+        <p class="narrative-text" style="margin-top:1rem;opacity:1">Press Enter to start</p>
+      </div>`;
+    return;
+  }
+
+  // Video scene
+  if (scene.type === "video") {
+    game.innerHTML = `
+      <div class="scene-container" style="display:flex;align-items:center;justify-content:center;width:100%;height:100vh;padding:0;margin:0">
+        <div class="gradient-overlay overlay-${bg}"></div>
+        <div class="vignette"></div>
+        <video id="scene-video" style="width:100%;height:100%;object-fit:contain;background:black" autoplay controls>
+          <source id="video-source" type="video/mp4">
+        </video>
+      </div>`;
+    
+    setTimeout(function() {
+      const videoSource = document.getElementById("video-source");
+      const video = document.getElementById("scene-video");
+      
+      if (videoSource && scene.videoSrc) {
+        videoSource.src = scene.videoSrc;
+        console.log("Loading video: " + scene.videoSrc);
+      }
+      
+      if (video) {
+        video.onended = function() {
+          console.log("Video ended, advancing...");
+          if (scene.nextScene) goToScene(scene.nextScene);
+        };
+        video.play().catch(err => console.log("Play error:", err));
+      }
+    }, 100);
+    return;
+  }
+
+  // Build scene HTML
+  let html = `<div class="scene-container ${isTransitioning ? '' : ''}" onclick="handleSceneClick()">`;
+
+  // Background image
+  if (scene.backgroundImage) {
+    html += `<img src="${scene.backgroundImage}" alt="" class="bg-image" />`;
+  }
+
+  // Overlays
+  html += `<div class="gradient-overlay overlay-${bg}"></div>`;
+  html += `<div class="vignette"></div>`;
+
+  // Content
+  html += `<div class="content">`;
+
+  // Day marker
+  if (scene.dayMarker) {
+    html += `<h1 class="day-marker">${scene.dayMarker}</h1>`;
+  }
+
+  // Text lines
+  html += `<div style="display:flex;flex-direction:column;gap:1rem;width:100%">`;
+  if (scene.text) {
+    for (let i = 0; i < textIndex && i < scene.text.length; i++) {
+      html += `<p class="scene-text" style="animation-delay:${i * 0.05}s">${scene.text[i]}</p>`;
+    }
+  }
+  html += `</div>`;
+
+  // Special text
+  if (isTextComplete && scene.specialText) {
+    const st = scene.specialText;
+    if (st.type === "diary") {
+      html += `<div class="diary-text">${st.content}</div>`;
+    } else if (st.type === "whisper") {
+      html += `<p class="whisper-text">${st.content}</p>`;
+    } else if (st.type === "sms") {
+      html += `<div class="sms-text">${st.content}</div>`;
+    } else if (st.type === "glitch") {
+      html += `<p class="glitch-text">${st.content}</p>`;
+    }
+  }
+
+  // Choices
+  if (showChoices && scene.choices) {
+    html += `<div class="choices-container">`;
+    scene.choices.forEach(function(c) {
+      html += `<button class="choice-button" onclick="event.stopPropagation(); makeChoice('${c.label}','${c.nextScene}')">
+        <span class="label">${c.label})</span>${c.text}
+      </button>`;
+    });
+    html += `</div>`;
+  }
+
+  // Continue prompt
+  if (isTextComplete && scene.type !== "choice" && scene.nextScene) {
+    html += `<p class="narrative-text continue-prompt" style="margin-top:1.5rem">Press Enter or click to continue</p>`;
+  }
+
+  // Tap indicator
+  if (!isTextComplete) {
+    html += `<p class="narrative-text tap-indicator">▼</p>`;
+  }
+
+  // Ending
+  if (scene.type === "ending" && !scene.nextScene && isTextComplete) {
+    html += `<p class="end-text">The End.</p>`;
+  }
+
+  html += `</div></div>`;
+  game.innerHTML = html;
+
+  // Auto-advance logic
+  if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+
+  // Show choices after delay
+  if (isTextComplete && scene.type === "choice" && !showChoices) {
+    setTimeout(function() {
+      showChoices = true;
+      render();
+    }, 400);
+  }
+}
+
+// ===== GAME LOGIC =====
+function handleSceneClick() {
+  const scene = scenes[gameState.currentSceneId];
+  if (!scene) return;
+  if (scene.type === "video") return; // Don't advance on click for videos
+  if (scene.type !== "choice" || textIndex < scene.text.length) {
+    advanceText();
+  }
+}
+
+function advanceText() {
+  const scene = scenes[gameState.currentSceneId];
+  if (!scene) return;
+  if (textIndex < scene.text.length) {
+    textIndex++;
+    render();
+  } else if (scene.nextScene && scene.type !== "choice") {
+    goToScene(scene.nextScene);
+  }
+}
+
+function goToScene(sceneId) {
+  if (isTransitioning) return;
+  isTransitioning = true;
+
+  // Fade out
+  const container = document.querySelector(".scene-container");
+  if (container) container.style.animation = "scene-fade-out 0.4s ease-in forwards";
+
+  setTimeout(function() {
+    gameState.history.push(gameState.currentSceneId);
+    gameState.currentSceneId = sceneId;
+    textIndex = 0;
+    showChoices = false;
+    isTransitioning = false;
+    saveGame();
+    render();
+  }, 500);
+}
+
+function makeChoice(label, nextScene) {
+  gameState.choices[gameState.currentSceneId] = label;
+  saveGame();
+  goToScene(nextScene);
+}
+
+function restart() {
+  localStorage.removeItem(STORAGE_KEY);
+  gameState = { currentSceneId: FIRST_SCENE, choices: {}, history: [] };
+  textIndex = 0;
+  showChoices = false;
+  saveGame();
+  render();
+}
+
+function skipVideo() {
+  const scene = scenes[gameState.currentSceneId];
+  if (scene && scene.nextScene) {
+    goToScene(scene.nextScene);
+  }
+}
+
+// ===== KEYBOARD NAVIGATION =====
+document.addEventListener("keydown", function(e) {
+  if (e.key === "R" || e.key === "r") {
+    restart();
+    return;
+  }
+  if (e.key === "Enter" || e.key === " " || e.key === "ArrowRight" || e.key === "ArrowDown") {
+    e.preventDefault();
+    advanceText();
+  }
+});
+
+// ===== RESTART BUTTON =====
+document.getElementById("restart-btn").addEventListener("click", restart);
+
+// ===== START =====
+render();
