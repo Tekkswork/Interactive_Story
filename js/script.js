@@ -592,3 +592,15 @@ document.getElementById("restart-btn").addEventListener("click", restart);
 
 // ===== START =====
 render();
+
+
+// Halla Monica :) har skrevet litt kommentarer om de 7 fasene under
+
+// Kort logg over fasene mine:
+// Fase 1: Satt opp prosjektet og laget et tydelig startpunkt i Git.
+// Fase 2: Bygget opp HTML-strukturen og la inn grunnleggende CSS.
+// Fase 3: Startet JavaScript-logikken med scenedata og lagring.
+// Fase 4: Videreutviklet JavaScript med sceneoverganger, valg og navigasjon.
+// Fase 5: Bygget videre på CSS for scene, tekst og visuelle elementer.
+// Fase 6: Fullførte styling, animasjoner og interaktive detaljer.
+// Fase 7: Dokumenterte arbeidsprosessen og oppsummerte fasene.
